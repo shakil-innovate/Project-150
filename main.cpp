@@ -143,12 +143,7 @@ void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
 
 // Display intro image
 void renderIntro(SDL_Renderer* renderer) {
-    showImage(renderer, "image/cover.png", 3000);
-}
-
-bool isPointInsideButton(int mouseX, int mouseY, SDL_Rect& buttonRect) {
-    return mouseX >= buttonRect.x && mouseX <= buttonRect.x + buttonRect.w &&
-           mouseY >= buttonRect.y && mouseY <= buttonRect.y + buttonRect.h;
+    showImage(renderer, "image/cover.png", 5000);
 }
 
 // Generate random food position
