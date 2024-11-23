@@ -19,6 +19,7 @@ void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font
 void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs);
 void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font);
 void renderIntro(SDL_Renderer* renderer);
+void renderEnd(SDL_Renderer* renderer);
 Segment generateFood();
 void handleEvents(bool& quit, int& dx, int& dy);
 bool checkCollision(const Segment& a, const Segment& b);
@@ -60,8 +61,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (quit) {
-            showImage(renderer, "image/gameover.png",3000); // Show the game over image for 3 seconds
-            break; // Exit the game loop
+           renderEnd(renderer);
         }
     }
 
@@ -141,10 +141,46 @@ void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
     SDL_Quit();
 }
 
-// Display intro image
+// Display intro image and wait for any key press
 void renderIntro(SDL_Renderer* renderer) {
-    showImage(renderer, "image/cover.png", 5000);
+    showImage(renderer, "image/cover.png", 0); // Initially show the intro image for 5 seconds
+    bool introDone = false;
+
+    // Keep the intro screen until any key is pressed
+    while (!introDone) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                introDone = true; // Exit if the window is closed
+            }
+            if (event.type == SDL_KEYDOWN) {
+                introDone = true; // Exit when any key is pressed
+            }
+        }
+    }
 }
+
+
+
+// Display intro image and wait for any key press
+void renderEnd(SDL_Renderer* renderer) {
+    showImage(renderer, "image/gameover.png", 0); // Initially show the intro image for 5 seconds
+    bool introDone = false;
+
+    // Keep the intro screen until any key is pressed
+    while (!introDone) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                introDone = true; // Exit if the window is closed
+            }
+            if (event.type == SDL_KEYDOWN) {
+                introDone = true; // Exit when any key is pressed
+            }
+        }
+    }
+}
+
 
 // Generate random food position
 Segment generateFood() {
@@ -153,6 +189,7 @@ Segment generateFood() {
         rand() % ((SCREEN_HEIGHT - 2 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE
     };
 }
+
 
 // Handle user input
 void handleEvents(bool& quit, int& dx, int& dy) {
