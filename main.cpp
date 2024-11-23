@@ -249,7 +249,7 @@ void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segm
     }
 
     // Render the score
-    renderText(renderer, font, "Score: " + to_string(score), 10, 10);
+    renderText(renderer, font, "Score: " + to_string(score), 500, 0);
 
     SDL_RenderPresent(renderer);
 }
