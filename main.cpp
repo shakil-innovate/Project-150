@@ -11,6 +11,7 @@
     const int SCREEN_HEIGHT = 480;
     const int SQUARE_SIZE = 20;
     const int SNAKE_SPEED = 100;
+    Mix_Chunk* gameOverSound = nullptr;
 
     struct Segment {
         int x, y;
@@ -114,6 +115,11 @@
         exit(1);
        }
 
+    gameOverSound = Mix_LoadWAV("sound/gameover.wav"); 
+    if (!gameOverSound) {
+        cerr << "Error loading game over sound: " << Mix_GetError() << endl;
+    }
+
         window = SDL_CreateWindow("Simple Snake Game",
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
@@ -166,6 +172,7 @@
 
     void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
         TTF_CloseFont(font);
+         Mix_FreeChunk(gameOverSound);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         TTF_Quit();
@@ -397,6 +404,11 @@
             snake[0].y < SQUARE_SIZE || snake[0].y >= SCREEN_HEIGHT - SQUARE_SIZE) {
             quit = true;
         }
+
+        if (quit && gameOverSound) 
+        {
+        Mix_PlayChannel(-1, gameOverSound, 0); 
+       }
     }
 
     // Render the game scene
