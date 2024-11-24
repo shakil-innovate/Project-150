@@ -12,22 +12,24 @@
     const int SQUARE_SIZE = 20;
     const int SNAKE_SPEED = 100;
     Mix_Chunk* gameOverSound = nullptr;
+    Mix_Chunk* eatingSound = nullptr;
+    SDL_Texture* appleTexture = nullptr;
 
     struct Segment {
         int x, y;
     };
 
-    // Function prototypes
-    void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font);
+   
+    void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture);
     void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs);
-    void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font);
+    void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,SDL_Texture* appleTexturet);
     void renderIntro(SDL_Renderer* renderer, TTF_Font* font);
     void renderEnd(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score);
     Segment generateFood();
     void handleEvents(bool& quit, int& dx, int& dy);
     bool checkCollision(const Segment& a, const Segment& b);
     void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& foodEaten, bool& quit, int& score);
-    void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score);
+    void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score,SDL_Texture* appleTexture);
     void renderText(SDL_Renderer* renderer, TTF_Font* font, const string& text, int x, int y);
     void saveHighScore(int highScore);
     int loadHighScore();
@@ -38,7 +40,7 @@
         SDL_Renderer* renderer = nullptr;
         TTF_Font* font = nullptr;
 
-        initializeSDL(window, renderer, font);
+        initializeSDL(window, renderer, font,appleTexture);
         renderIntro(renderer,font);
 
         bool quit = false;
@@ -66,7 +68,7 @@
                     food = generateFood();
                 }
 
-                renderGame(renderer, snake, food, font, score);
+                renderGame(renderer, snake, food, font, score,appleTexture);
             }
 
             if (quit) {
@@ -79,12 +81,12 @@
             }
         }
 
-        cleanupSDL(window, renderer, font);
+        cleanupSDL(window, renderer, font,appleTexture);
         return 0;
     }
 
 
-    void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font)
+    void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture)
     {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
@@ -120,6 +122,12 @@
         cerr << "Error loading game over sound: " << Mix_GetError() << endl;
     }
 
+    eatingSound = Mix_LoadWAV("sound/eating.wav");
+     if (!eatingSound) 
+    {
+    cerr << "Error loading eating sound: " << Mix_GetError() << endl;
+    }
+
         window = SDL_CreateWindow("Simple Snake Game",
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
@@ -145,7 +153,22 @@
             cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << endl;
             exit(1);
         }
+
+         // Load apple image
+    SDL_Surface* appleSurface = IMG_Load("image/apple.png");
+    if (!appleSurface) {
+        cerr << "Failed to load apple image: " << IMG_GetError() << endl;
+        exit(1);
     }
+    appleTexture = SDL_CreateTextureFromSurface(renderer, appleSurface);
+    SDL_FreeSurface(appleSurface);
+
+    if (!appleTexture) 
+    {
+        cerr << "Failed to create apple texture: " << SDL_GetError() << endl;
+        exit(1);
+    }
+ }
 
 
 
@@ -170,9 +193,11 @@
     }
 
 
-    void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
+    void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,SDL_Texture* appleTexturet) {
         TTF_CloseFont(font);
-         Mix_FreeChunk(gameOverSound);
+         SDL_DestroyTexture(appleTexture);
+        Mix_FreeChunk(gameOverSound);
+        Mix_FreeChunk(eatingSound);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         TTF_Quit();
@@ -383,6 +408,11 @@
         {
             foodEaten = true;
             score += 10; // Increment score
+
+            if (eatingSound) 
+            {
+            Mix_PlayChannel(-1, eatingSound, 0);
+           }
         } 
         else
         {
@@ -412,7 +442,7 @@
     }
 
     // Render the game scene
-    void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score) {
+    void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score,SDL_Texture* appleTexture) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
@@ -429,9 +459,10 @@
         }
 
         // Draw food
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         SDL_Rect foodRect = {food.x, food.y, SQUARE_SIZE, SQUARE_SIZE};
-        SDL_RenderFillRect(renderer, &foodRect);
+       SDL_RenderCopy(renderer, appleTexture, nullptr, &foodRect);
+
+
 
         // Draw snake
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
