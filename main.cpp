@@ -14,6 +14,7 @@
     Mix_Chunk* gameOverSound = nullptr;
     Mix_Chunk* eatingSound = nullptr;
     SDL_Texture* appleTexture = nullptr;
+    SDL_Texture* snakeHeadTexture = nullptr;
 
     struct Segment {
         int x, y;
@@ -168,6 +169,19 @@
         cerr << "Failed to create apple texture: " << SDL_GetError() << endl;
         exit(1);
     }
+
+     SDL_Surface* snakeHeadSurface = IMG_Load("image/snake_head.png");
+    if (!snakeHeadSurface) {
+        cerr << "Failed to load snake head image: " << IMG_GetError() << endl;
+        exit(1);
+    }
+    snakeHeadTexture = SDL_CreateTextureFromSurface(renderer, snakeHeadSurface);
+    SDL_FreeSurface(snakeHeadSurface);
+
+    if (!snakeHeadTexture) {
+        cerr << "Failed to create snake head texture: " << SDL_GetError() << endl;
+        exit(1);
+    }
  }
 
 
@@ -193,18 +207,6 @@
     }
 
 
-    void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,SDL_Texture* appleTexturet) {
-        TTF_CloseFont(font);
-         SDL_DestroyTexture(appleTexture);
-        Mix_FreeChunk(gameOverSound);
-        Mix_FreeChunk(eatingSound);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        TTF_Quit();
-        IMG_Quit();
-        Mix_Quit(); 
-        SDL_Quit();
-    }
 
     void renderIntro(SDL_Renderer* renderer, TTF_Font* font) 
     {
@@ -463,14 +465,27 @@
        SDL_RenderCopy(renderer, appleTexture, nullptr, &foodRect);
 
 
+        SDL_Rect headRect = {snake[0].x, snake[0].y, SQUARE_SIZE, SQUARE_SIZE};
+     SDL_RenderCopy(renderer, snakeHeadTexture, nullptr, &headRect);
 
-        // Draw snake
-        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-        for (const auto& segment : snake) {
-            SDL_Rect snakeRect = {segment.x, segment.y, SQUARE_SIZE, SQUARE_SIZE};
-            SDL_RenderFillRect(renderer, &snakeRect);
+// Set render color for snake body
+SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Green snake body
+
+// Function to render a filled circle
+auto drawCircle = [&](int centerX, int centerY, int radius) {
+    for (int y = -radius; y <= radius; ++y) {
+        for (int x = -radius; x <= radius; ++x) {
+            if (x * x + y * y <= radius * radius) {
+                SDL_RenderDrawPoint(renderer, centerX + x, centerY + y);
+            }
         }
+    }
+};
 
+// Draw the body (skip the head)
+for (size_t i = 1; i < snake.size(); ++i) {
+    drawCircle(snake[i].x + SQUARE_SIZE / 2, snake[i].y + SQUARE_SIZE / 2, SQUARE_SIZE / 2);
+}
         // Render the score
         renderText(renderer, font, "Score: " + to_string(score), 500, 0);
 
@@ -513,3 +528,18 @@ int loadHighScore()
 
     return highScore;  // Return the loaded high score, default to 0 if no file found
 }
+
+
+    void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,SDL_Texture* appleTexturet) {
+        TTF_CloseFont(font);
+         SDL_DestroyTexture(appleTexture);
+         SDL_DestroyTexture(snakeHeadTexture);
+        Mix_FreeChunk(gameOverSound);
+        Mix_FreeChunk(eatingSound);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
+        IMG_Quit();
+        Mix_Quit(); 
+        SDL_Quit();
+    }
