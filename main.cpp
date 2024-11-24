@@ -18,7 +18,7 @@ struct Segment {
 void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font);
 void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs);
 void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font);
-void renderIntro(SDL_Renderer* renderer);
+void renderIntro(SDL_Renderer* renderer, TTF_Font* font);
 void renderEnd(SDL_Renderer* renderer);
 Segment generateFood();
 void handleEvents(bool& quit, int& dx, int& dy);
@@ -27,13 +27,14 @@ void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& food
 void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score);
 void renderText(SDL_Renderer* renderer, TTF_Font* font, const string& text, int x, int y);
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     TTF_Font* font = nullptr;
 
     initializeSDL(window, renderer, font);
-    renderIntro(renderer);
+    renderIntro(renderer,font);
 
     bool quit = false;
     vector<Segment> snake = {{SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2}};
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     Segment food = generateFood();
     Uint32 lastMove = SDL_GetTicks();
-    int score = 0; // Initialize the score
+    int score = 0;
 
     while (!quit) {
         handleEvents(quit, dx, dy);
@@ -69,19 +70,22 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// Initialize SDL components
-void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font) {
+
+void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font)
+   {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
         exit(1);
-    }
+   }
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
+    {
         cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << endl;
         exit(1);
     }
 
-    if (TTF_Init() == -1) {
+    if (TTF_Init() == -1) 
+    {
         cerr << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << endl;
         exit(1);
     }
@@ -99,20 +103,23 @@ void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
+    if (!renderer) 
+    {
         cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << endl;
         exit(1);
     }
 
-    font = TTF_OpenFont("fonts/atop-font.ttf", 24); // Load your font file
-    if (!font) {
+    font = TTF_OpenFont("fonts/atop-font.ttf", 24); 
+    if (!font) 
+    {
         cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << endl;
         exit(1);
     }
 }
 
-// Function to display an image for a specified amount of time
-void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs) {
+
+void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs) 
+   {
     SDL_Surface* surface = IMG_Load(imagePath);
     if (!surface) {
         cerr << "Error: Could not load image " << imagePath << " " << IMG_GetError() << endl;
@@ -131,7 +138,7 @@ void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs)
     SDL_DestroyTexture(texture);
 }
 
-// Clean up SDL components
+
 void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
@@ -142,19 +149,51 @@ void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
 }
 
 // Display intro image and wait for any key press
-void renderIntro(SDL_Renderer* renderer) {
-    showImage(renderer, "image/cover.png", 0); // Initially show the intro image for 5 seconds
-    bool introDone = false;
+void renderIntro(SDL_Renderer* renderer, TTF_Font* font)
+ {
+    
+    //intro image
+    showImage(renderer,"image/cover.png",0);
 
-    // Keep the intro screen until any key is pressed
-    while (!introDone) {
+   //define button with it's position
+    SDL_Rect buttonRect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 25, 200, 50};
+    SDL_Color buttonColor = {0, 128, 255, 255};
+    SDL_Color textColor = {255, 255, 255, 255};
+
+    bool introDone = false;
+ 
+    while (!introDone) 
+    {
         SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                introDone = true; // Exit if the window is closed
+
+        // color the button
+        SDL_SetRenderDrawColor(renderer, buttonColor.r, buttonColor.g, buttonColor.b, buttonColor.a);
+        SDL_RenderFillRect(renderer, &buttonRect);
+
+        // Render "Play Game" text
+        renderText(renderer, font, "Play Game", buttonRect.x + 50, buttonRect.y + 10);
+
+        SDL_RenderPresent(renderer);
+
+        // Handle events
+        while (SDL_PollEvent(&event)) 
+        {
+            if (event.type == SDL_QUIT) 
+            {
+                exit(0); // i want to quit the game
             }
-            if (event.type == SDL_KEYDOWN) {
-                introDone = true; // Exit when any key is pressed
+
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+             {
+                int mouseX = event.button.x;
+                int mouseY = event.button.y;
+
+                // Check if the button was clicked
+                if (mouseX >= buttonRect.x && mouseX <= buttonRect.x + buttonRect.w &&
+                    mouseY >= buttonRect.y && mouseY <= buttonRect.y + buttonRect.h) 
+                {
+                    introDone = true; // Exit the
+                }
             }
         }
     }
