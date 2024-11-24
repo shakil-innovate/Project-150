@@ -19,7 +19,7 @@ void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font
 void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs);
 void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font);
 void renderIntro(SDL_Renderer* renderer, TTF_Font* font);
-void renderEnd(SDL_Renderer* renderer);
+void renderEnd(SDL_Renderer* renderer,TTF_Font* font);
 Segment generateFood();
 void handleEvents(bool& quit, int& dx, int& dy);
 bool checkCollision(const Segment& a, const Segment& b);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
         }
 
         if (quit) {
-           renderEnd(renderer);
+           renderEnd(renderer,font);
         }
     }
 
@@ -118,7 +118,8 @@ void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font
 }
 
 
-void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs) 
+
+void showImage(SDL_Renderer* renderer, const char* imagePath,int displayTimeMs)
    {
     SDL_Surface* surface = IMG_Load(imagePath);
     if (!surface) {
@@ -148,17 +149,17 @@ void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font) {
     SDL_Quit();
 }
 
-// Display intro image and wait for any key press
-void renderIntro(SDL_Renderer* renderer, TTF_Font* font)
+void renderIntro(SDL_Renderer* renderer, TTF_Font* font) 
  {
-    
-    //intro image
-    showImage(renderer,"image/cover.png",0);
+    // Intro image
+    showImage(renderer, "image/cover.png", 0);
 
-   //define button with it's position
-    SDL_Rect buttonRect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 - 25, 200, 50};
-    SDL_Color buttonColor = {0, 128, 255, 255};
-    SDL_Color textColor = {255, 255, 255, 255};
+    
+    SDL_Rect playButtonRect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 +15, 200, 50};
+    SDL_Rect quitButtonRect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 +75, 200, 50}; 
+
+    SDL_Color buttonColor = {0, 0,200, 255}; 
+    SDL_Color textColor = {255, 255, 255, 255}; 
 
     bool introDone = false;
  
@@ -166,33 +167,40 @@ void renderIntro(SDL_Renderer* renderer, TTF_Font* font)
     {
         SDL_Event event;
 
-        // color the button
+        
         SDL_SetRenderDrawColor(renderer, buttonColor.r, buttonColor.g, buttonColor.b, buttonColor.a);
-        SDL_RenderFillRect(renderer, &buttonRect);
+        SDL_RenderFillRect(renderer, &playButtonRect);
+        renderText(renderer, font, "Play Game", playButtonRect.x + 50, playButtonRect.y + 10);
 
-        // Render "Play Game" text
-        renderText(renderer, font, "Play Game", buttonRect.x + 50, buttonRect.y + 10);
+        SDL_RenderFillRect(renderer, &quitButtonRect);
+        renderText(renderer, font, "Quit", quitButtonRect.x + 75, quitButtonRect.y + 10);
 
         SDL_RenderPresent(renderer);
-
-        // Handle events
-        while (SDL_PollEvent(&event)) 
-        {
+       
+        while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) 
             {
-                exit(0); // i want to quit the game
+                exit(0); 
             }
 
+            
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
              {
                 int mouseX = event.button.x;
                 int mouseY = event.button.y;
 
-                // Check if the button was clicked
-                if (mouseX >= buttonRect.x && mouseX <= buttonRect.x + buttonRect.w &&
-                    mouseY >= buttonRect.y && mouseY <= buttonRect.y + buttonRect.h) 
-                {
-                    introDone = true; // Exit the
+                
+                if (mouseX >= playButtonRect.x && mouseX <= playButtonRect.x + playButtonRect.w &&
+                    mouseY >= playButtonRect.y && mouseY <= playButtonRect.y + playButtonRect.h)
+                     {
+                    introDone = true; // Start the game
+                     }
+
+                // Check if the "Quit" button was clicked
+                if (mouseX >= quitButtonRect.x && mouseX <= quitButtonRect.x + quitButtonRect.w &&
+                    mouseY >= quitButtonRect.y && mouseY <= quitButtonRect.y + quitButtonRect.h) 
+                    {
+                    exit(0);
                 }
             }
         }
@@ -201,28 +209,64 @@ void renderIntro(SDL_Renderer* renderer, TTF_Font* font)
 
 
 
-// Display intro image and wait for any key press
-void renderEnd(SDL_Renderer* renderer) {
-    showImage(renderer, "image/gameover.png", 0); // Initially show the intro image for 5 seconds
+void renderEnd(SDL_Renderer* renderer,TTF_Font* font)
+{
+    showImage(renderer, "image/gameover.png", 0); 
     bool introDone = false;
+
+    SDL_Rect RestartButtonRect = {SCREEN_WIDTH / 2 - 130, SCREEN_HEIGHT / 2 +110, 250, 50};
+    SDL_Rect quitButtonRect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 +170, 200, 50};
+    
+    SDL_Color buttonColor = {0, 0,0, 255}; 
+    SDL_Color textColor = {255, 255, 255, 255}; 
 
     // Keep the intro screen until any key is pressed
     while (!introDone) {
         SDL_Event event;
+
+         SDL_SetRenderDrawColor(renderer, buttonColor.r, buttonColor.g, buttonColor.b, buttonColor.a);
+         SDL_RenderFillRect(renderer, &RestartButtonRect);
+
+        renderText(renderer, font, "Restart Game", RestartButtonRect.x + 50, RestartButtonRect.y + 10);
+
+         SDL_RenderFillRect(renderer, &quitButtonRect);
+         renderText(renderer, font, "Quit", quitButtonRect.x + 75, quitButtonRect.y + 10);
+
+         SDL_RenderPresent(renderer);
+
+
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                introDone = true; // Exit if the window is closed
+            if (event.type == SDL_QUIT) 
+            {
+                introDone = true; 
             }
-            if (event.type == SDL_KEYDOWN) {
-                introDone = true; // Exit when any key is pressed
-            }
+            
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+             {
+                int mouseX = event.button.x;
+                int mouseY = event.button.y;
+
+                if (mouseX >= RestartButtonRect.x && mouseX <= RestartButtonRect.x + RestartButtonRect.w &&
+                    mouseY >= RestartButtonRect.y && mouseY <= RestartButtonRect.y + RestartButtonRect.h) {
+                    introDone = true; 
+                    main(0, nullptr);
+                }
+
+                 if (mouseX >= quitButtonRect.x && mouseX <= quitButtonRect.x + quitButtonRect.w &&
+                    mouseY >= quitButtonRect.y && mouseY <= quitButtonRect.y + quitButtonRect.h) 
+                  {
+                    exit(0);
+                  }
+             }
+
         }
     }
 }
 
 
-// Generate random food position
-Segment generateFood() {
+
+Segment generateFood() 
+{
     return {
         rand() % ((SCREEN_WIDTH - 2 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE,
         rand() % ((SCREEN_HEIGHT - 2 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE
@@ -230,34 +274,43 @@ Segment generateFood() {
 }
 
 
-// Handle user input
-void handleEvents(bool& quit, int& dx, int& dy) {
+void handleEvents(bool& quit, int& dx, int& dy) 
+{
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
+    while (SDL_PollEvent(&event)) 
+    {
+        if (event.type == SDL_QUIT) 
+        {
             quit = true;
-        } else if (event.type == SDL_KEYDOWN) {
-            switch (event.key.keysym.sym) {
+        } 
+        else if (event.type == SDL_KEYDOWN) 
+        {
+            switch (event.key.keysym.sym)
+             {
                 case SDLK_UP:
-                    if (dy == 0) {
+                    if (dy == 0) 
+                    {
                         dx = 0;
                         dy = -SQUARE_SIZE;
                     }
                     break;
                 case SDLK_DOWN:
-                    if (dy == 0) {
+                    if (dy == 0)
+                    {
                         dx = 0;
                         dy = SQUARE_SIZE;
                     }
                     break;
                 case SDLK_LEFT:
-                    if (dx == 0) {
+                    if (dx == 0) 
+                    {
                         dx = -SQUARE_SIZE;
                         dy = 0;
                     }
                     break;
                 case SDLK_RIGHT:
-                    if (dx == 0) {
+                    if (dx == 0) 
+                    {
                         dx = SQUARE_SIZE;
                         dy = 0;
                     }
@@ -267,33 +320,40 @@ void handleEvents(bool& quit, int& dx, int& dy) {
     }
 }
 
-// Check if two segments collide
-bool checkCollision(const Segment& a, const Segment& b) {
+
+bool checkCollision(const Segment& a, const Segment& b) 
+{
     return a.x == b.x && a.y == b.y;
 }
 
-// Move the snake and check for collisions
-void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& foodEaten, bool& quit, int& score) {
+
+void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& foodEaten, bool& quit, int& score)
+ {
     Segment newHead = {snake[0].x + dx, snake[0].y + dy};
     snake.insert(snake.begin(), newHead);
 
-    // Check collision with food
-    if (checkCollision(snake[0], food)) {
+    
+    if (checkCollision(snake[0], food)) 
+    {
         foodEaten = true;
         score += 10; // Increment score
-    } else {
+    } 
+    else
+    {
         snake.pop_back();
     }
 
-    // Check collision with itself
-    for (size_t i = 1; i < snake.size(); i++) {
-        if (checkCollision(snake[0], snake[i])) {
+ 
+    for (size_t i = 1; i < snake.size(); i++) 
+    {
+        if (checkCollision(snake[0], snake[i])) 
+        {
             quit = true;
             break;
         }
     }
 
-    // Check collision with walls
+    // Check collision wall
     if (snake[0].x < SQUARE_SIZE || snake[0].x >= SCREEN_WIDTH - SQUARE_SIZE ||
         snake[0].y < SQUARE_SIZE || snake[0].y >= SCREEN_HEIGHT - SQUARE_SIZE) {
         quit = true;
