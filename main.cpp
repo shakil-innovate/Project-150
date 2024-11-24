@@ -1,6 +1,7 @@
     #include <SDL2/SDL.h>
     #include <SDL2/SDL_image.h>
     #include <SDL2/SDL_ttf.h>
+    #include <SDL2/SDL_mixer.h>
     #include <fstream> 
     #include <bits/stdc++.h>
 
@@ -101,6 +102,18 @@
             exit(1);
         }
 
+        if (Mix_Init(MIX_INIT_MP3) == 0) 
+        {
+        cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << endl;
+        exit(1);
+        }
+
+       if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
+       {
+        cerr << "SDL_mixer could not open audio! SDL_mixer Error: " << Mix_GetError() << endl;
+        exit(1);
+       }
+
         window = SDL_CreateWindow("Simple Snake Game",
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
@@ -157,12 +170,23 @@
         SDL_DestroyWindow(window);
         TTF_Quit();
         IMG_Quit();
+        Mix_Quit(); 
         SDL_Quit();
     }
 
     void renderIntro(SDL_Renderer* renderer, TTF_Font* font) 
     {
-        // Intro image
+    Mix_Music* music = Mix_LoadMUS("sound/intro.mp3");
+
+    if (music == nullptr)
+     {
+         cerr << "Error loading music: " << Mix_GetError() << endl;
+     }
+     else
+     {
+        Mix_PlayMusic(music, -1);  
+     }
+
         showImage(renderer, "image/cover.png", 0);
 
         
@@ -205,6 +229,7 @@
                         mouseY >= playButtonRect.y && mouseY <= playButtonRect.y + playButtonRect.h)
                         {
                         introDone = true; // Start the game
+                         Mix_HaltMusic();
                         }
 
                     // Check if the "Quit" button was clicked
