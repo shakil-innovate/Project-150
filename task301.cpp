@@ -427,14 +427,16 @@
 
                     case SDLK_y:
                     {
-                        paused=true;
+                        paused=false;
                         score-=10;
+                        
                         break;
+                        
                     }
 
                     case SDLK_n:
                     {
-                        exit(01);
+                        quit=true;
                     }
                 }
             }
