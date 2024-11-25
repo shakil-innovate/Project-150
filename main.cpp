@@ -11,10 +11,17 @@
     const int SCREEN_HEIGHT = 480;
     const int SQUARE_SIZE = 20;
     const int SNAKE_SPEED = 100;
+    const int BONUS_FOOD_SIZE = SQUARE_SIZE * 2;
     Mix_Chunk* gameOverSound = nullptr;
     Mix_Chunk* eatingSound = nullptr;
+    Mix_Chunk* bonusSound = nullptr;
     SDL_Texture* appleTexture = nullptr;
     SDL_Texture* snakeHeadTexture = nullptr;
+    bool bonusFoodActive = false;
+    Uint32 bonusFoodStartTime = 0;
+    const int BONUS_FOOD_DURATION = 4000;
+    int foodCounter = 0; 
+    SDL_Texture* bonusFoodTexture = nullptr;
 
     struct Segment {
         int x, y;
@@ -27,8 +34,10 @@
     void renderIntro(SDL_Renderer* renderer, TTF_Font* font);
     void renderEnd(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score);
     Segment generateFood();
+    Segment bonusFood;
     void handleEvents(bool& quit, int& dx, int& dy);
     bool checkCollision(const Segment& a, const Segment& b);
+    bool checkBonusCollision(const Segment& a, const Segment& b);
     void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& foodEaten, bool& quit, int& score);
     void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score,SDL_Texture* appleTexture);
     void renderText(SDL_Renderer* renderer, TTF_Font* font, const string& text, int x, int y);
@@ -129,6 +138,8 @@
     cerr << "Error loading eating sound: " << Mix_GetError() << endl;
     }
 
+    bonusSound = Mix_LoadWAV("sound/bonus.wav");
+
         window = SDL_CreateWindow("Simple Snake Game",
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
@@ -180,6 +191,19 @@
 
     if (!snakeHeadTexture) {
         cerr << "Failed to create snake head texture: " << SDL_GetError() << endl;
+        exit(1);
+    }
+
+    SDL_Surface* bonusFoodSurface = IMG_Load("image/apple.png");
+    if (!bonusFoodSurface) {
+        cerr << "Failed to load bonus food image: " << IMG_GetError() << endl;
+        exit(1);
+    }
+    bonusFoodTexture = SDL_CreateTextureFromSurface(renderer, bonusFoodSurface);
+    SDL_FreeSurface(bonusFoodSurface);
+
+    if (!bonusFoodTexture) {
+        cerr << "Failed to create bonus food texture: " << SDL_GetError() << endl;
         exit(1);
     }
  }
@@ -399,6 +423,14 @@
         return a.x == b.x && a.y == b.y;
     }
 
+    bool checkBonusCollision(const Segment& a, const Segment& b)
+     {
+    const int BONUS_FOOD_SIZE = 20; // Adjust the size for the bonus food
+    return abs(a.x - b.x) < BONUS_FOOD_SIZE && abs(a.y - b.y) < BONUS_FOOD_SIZE;
+    }
+
+
+
 
     void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& foodEaten, bool& quit, int& score)
     {
@@ -410,11 +442,37 @@
         {
             foodEaten = true;
             score += 10; // Increment score
+             foodCounter++;
 
             if (eatingSound) 
             {
             Mix_PlayChannel(-1, eatingSound, 0);
            }
+
+           if (!bonusFoodActive && foodCounter % 5 == 0)
+           {
+            bonusFood = generateFood();
+            Mix_PlayChannel(-1, bonusSound, 0);
+
+            foodCounter=0;
+            bonusFoodActive = true;
+            bonusFoodStartTime = SDL_GetTicks();
+           }
+
+           if (bonusFoodActive && SDL_GetTicks() - bonusFoodStartTime > BONUS_FOOD_DURATION)
+            {
+              bonusFoodActive = false;
+           }
+        } 
+
+        else if (bonusFoodActive && checkBonusCollision(snake[0], bonusFood))
+         {
+        score += 50; // Bonus food gives 50 points
+        bonusFoodActive = false; // Reset bonus food
+        if (eatingSound) 
+         {
+            Mix_PlayChannel(-1, eatingSound, 0);
+         }
         } 
         else
         {
@@ -427,6 +485,7 @@
             if (checkCollision(snake[0], snake[i])) 
             {
                 quit = true;
+                foodCounter=0;
                 break;
             }
         }
@@ -434,6 +493,7 @@
         // Check collision wall
         if (snake[0].x < SQUARE_SIZE || snake[0].x >= SCREEN_WIDTH - SQUARE_SIZE ||
             snake[0].y < SQUARE_SIZE || snake[0].y >= SCREEN_HEIGHT - SQUARE_SIZE) {
+            foodCounter=0;
             quit = true;
         }
 
@@ -463,6 +523,12 @@
         // Draw food
         SDL_Rect foodRect = {food.x, food.y, SQUARE_SIZE, SQUARE_SIZE};
        SDL_RenderCopy(renderer, appleTexture, nullptr, &foodRect);
+
+         if (bonusFoodActive) 
+         {
+        SDL_Rect bonusFoodRect = {bonusFood.x, bonusFood.y, BONUS_FOOD_SIZE, BONUS_FOOD_SIZE};
+        SDL_RenderCopy(renderer, bonusFoodTexture, nullptr, &bonusFoodRect);
+        }
 
 
         SDL_Rect headRect = {snake[0].x, snake[0].y, SQUARE_SIZE, SQUARE_SIZE};
@@ -534,6 +600,7 @@ int loadHighScore()
         TTF_CloseFont(font);
          SDL_DestroyTexture(appleTexture);
          SDL_DestroyTexture(snakeHeadTexture);
+         SDL_DestroyTexture(bonusFoodTexture);
         Mix_FreeChunk(gameOverSound);
         Mix_FreeChunk(eatingSound);
         SDL_DestroyRenderer(renderer);
