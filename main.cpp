@@ -28,12 +28,12 @@
     };
 
    
-    void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture);
-    void showImage(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs);
+    void suruKor(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture);
+    void cobiDekha(SDL_Renderer* renderer, const char* imagePath, int displayTimeMs);
     void cleanupSDL(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font,SDL_Texture* appleTexturet);
-    void renderIntro(SDL_Renderer* renderer, TTF_Font* font);
-    void renderEnd(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score);
-    Segment generateFood();
+    void firstCobiDekha(SDL_Renderer* renderer, TTF_Font* font);
+    void sesCobiDekha(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score);
+    Segment khabarToiriKor();
     Segment bonusFood;
     void handleEvents(bool& quit, int& dx, int& dy);
     bool checkCollision(const Segment& a, const Segment& b);
@@ -50,15 +50,15 @@
         SDL_Renderer* renderer = nullptr;
         TTF_Font* font = nullptr;
 
-        initializeSDL(window, renderer, font,appleTexture);
-        renderIntro(renderer,font);
+        suruKor(window, renderer, font,appleTexture);
+        firstCobiDekha(renderer,font);
 
         bool quit = false;
         vector<Segment> snake = {{SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2}};
         int dx = SQUARE_SIZE;
         int dy = 0;
 
-        Segment food = generateFood();
+        Segment food = khabarToiriKor();
         Uint32 lastMove = SDL_GetTicks();
         int score = 0;
 
@@ -75,7 +75,7 @@
                 moveSnake(snake, dx, dy, food, foodEaten, quit, score);
 
                 if (foodEaten) {
-                    food = generateFood();
+                    food = khabarToiriKor();
                 }
 
                 renderGame(renderer, snake, food, font, score,appleTexture);
@@ -87,7 +87,7 @@
                 highScore = score;
                 saveHighScore(highScore);  
             }
-            renderEnd(renderer,font,score,highScore);
+            sesCobiDekha(renderer,font,score,highScore);
             }
         }
 
@@ -96,7 +96,7 @@
     }
 
 
-    void initializeSDL(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture)
+    void suruKor(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture)
     {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
@@ -210,7 +210,7 @@
 
 
 
-    void showImage(SDL_Renderer* renderer, const char* imagePath,int displayTimeMs)
+    void cobiDekha(SDL_Renderer* renderer, const char* imagePath,int displayTimeMs)
     {
         SDL_Surface* surface = IMG_Load(imagePath);
         if (!surface) {
@@ -232,7 +232,7 @@
 
 
 
-    void renderIntro(SDL_Renderer* renderer, TTF_Font* font) 
+    void firstCobiDekha(SDL_Renderer* renderer, TTF_Font* font) 
     {
     Mix_Music* music = Mix_LoadMUS("sound/intro.mp3");
 
@@ -245,7 +245,7 @@
         Mix_PlayMusic(music, -1);  
      }
 
-        showImage(renderer, "image/cover.png", 0);
+        cobiDekha(renderer, "image/cover.png", 0);
 
         
         SDL_Rect playButtonRect = {SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 +15, 200, 50};
@@ -303,9 +303,9 @@
 
 
 
-    void renderEnd(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score)
+    void sesCobiDekha(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score)
     {
-        showImage(renderer, "image/gameover.png", 0); 
+        cobiDekha(renderer, "image/gameover.png", 0); 
         bool introDone = false;
 
         SDL_Rect RestartButtonRect = {SCREEN_WIDTH / 2 - 130, SCREEN_HEIGHT / 2 +110, 250, 50};
@@ -362,7 +362,7 @@
 
 
 
-    Segment generateFood() 
+    Segment khabarToiriKor() 
     {
         return {
             rand() % ((SCREEN_WIDTH - 2 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE,
@@ -451,7 +451,7 @@
 
            if (!bonusFoodActive && foodCounter % 5 == 0)
            {
-            bonusFood = generateFood();
+            bonusFood = khabarToiriKor();
             Mix_PlayChannel(-1, bonusSound, 0);
 
             foodCounter=0;
