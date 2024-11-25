@@ -25,6 +25,9 @@
     const int BONUS_FOOD_DURATION = 4000;
     int foodCounter = 0; 
     SDL_Texture* bonusFoodTexture = nullptr;
+    int score=0;
+
+    bool paused=false;
 
     struct Segment {
         int x, y;
@@ -63,7 +66,7 @@
 
         Segment food = khabarToiriKor();
         Uint32 lastMove = SDL_GetTicks();
-        int score = 0;
+         score = 0;
 
          int highScore = loadHighScore();
        
@@ -383,13 +386,14 @@
     {
         SDL_Event event;
         while (SDL_PollEvent(&event)) 
-        {
+        {    
             if (event.type == SDL_QUIT) 
             {
                 quit = true;
             } 
             else if (event.type == SDL_KEYDOWN) 
             {
+                
                 switch (event.key.keysym.sym)
                 {
                     case SDLK_UP:
@@ -420,6 +424,18 @@
                             dy = 0;
                         }
                         break;
+
+                    case SDLK_y:
+                    {
+                        paused=true;
+                        score-=10;
+                        break;
+                    }
+
+                    case SDLK_n:
+                    {
+                        exit(01);
+                    }
                 }
             }
         }
@@ -442,6 +458,13 @@
 
     void moveSnake(vector<Segment>& snake, int dx, int dy, Segment& food, bool& foodEaten, bool& quit, int& score)
     {
+
+
+     if(paused==true)
+     {
+        return;
+     }
+    
         Segment newHead = {snake[0].x + dx, snake[0].y + dy};
         snake.insert(snake.begin(), newHead);
 
@@ -457,7 +480,7 @@
             Mix_PlayChannel(-1, eatingSound, 0);
             }
 
-           if (!bonusFoodActive && foodCounter % 5 == 0)
+           if (!bonusFoodActive && foodCounter % 2 == 0)
            {
             bonusFood = khabarToiriKor();
             Mix_PlayChannel(-1, bonusSound, 0);
@@ -512,10 +535,20 @@
             quit = true;
             }
 
+       
+
+
         if (quit && gameOverSound) 
         {
         Mix_PlayChannel(-1, gameOverSound, 0); 
        }
+
+        if (snake[0].x <100 || snake[0].x >= 600 ||
+            snake[0].y < SQUARE_SIZE || snake[0].y >= SCREEN_HEIGHT - SQUARE_SIZE) 
+            {
+            paused=true;
+            }
+    
     }
 
     void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score,SDL_Texture* appleTexture)
@@ -536,7 +569,7 @@
             SDL_RenderFillRect(renderer, &wall);
         }
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
         SDL_Rect walls2[] = {
             {500, 80,100 , SQUARE_SIZE},
             {580, 80, SQUARE_SIZE, 300},
