@@ -10,13 +10,16 @@
     const int SCREEN_WIDTH = 640;
     const int SCREEN_HEIGHT = 480;
     const int SQUARE_SIZE = 20;
-    const int SNAKE_SPEED = 100;
+    const int SNAKE_SPEED = 120;
     const int BONUS_FOOD_SIZE = SQUARE_SIZE * 2;
+
     Mix_Chunk* gameOverSound = nullptr;
     Mix_Chunk* eatingSound = nullptr;
     Mix_Chunk* bonusSound = nullptr;
+
     SDL_Texture* appleTexture = nullptr;
     SDL_Texture* snakeHeadTexture = nullptr;
+
     bool bonusFoodActive = false;
     Uint32 bonusFoodStartTime = 0;
     const int BONUS_FOOD_DURATION = 4000;
@@ -99,43 +102,43 @@
     void suruKor(SDL_Window*& window, SDL_Renderer*& renderer, TTF_Font*& font, SDL_Texture*& appleTexture)
     {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-            cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
+            cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
             exit(1);
     }
 
         if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
         {
-            cerr << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << endl;
+            cout << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError() << endl;
             exit(1);
         }
 
         if (TTF_Init() == -1) 
         {
-            cerr << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << endl;
+            cout << "SDL_ttf could not initialize! SDL_ttf Error: " << TTF_GetError() << endl;
             exit(1);
         }
 
         if (Mix_Init(MIX_INIT_MP3) == 0) 
         {
-        cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << endl;
+        cout << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << endl;
         exit(1);
         }
 
        if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
        {
-        cerr << "SDL_mixer could not open audio! SDL_mixer Error: " << Mix_GetError() << endl;
+        cout << "SDL_mixer could not open audio! SDL_mixer Error: " << Mix_GetError() << endl;
         exit(1);
        }
 
     gameOverSound = Mix_LoadWAV("sound/gameover.wav"); 
     if (!gameOverSound) {
-        cerr << "Error loading game over sound: " << Mix_GetError() << endl;
+        cout << "Error loading game over sound: " << Mix_GetError() << endl;
     }
 
     eatingSound = Mix_LoadWAV("sound/eating.wav");
      if (!eatingSound) 
     {
-    cerr << "Error loading eating sound: " << Mix_GetError() << endl;
+    cout << "Error loading eating sound: " << Mix_GetError() << endl;
     }
 
     bonusSound = Mix_LoadWAV("sound/bonus.wav");
@@ -147,29 +150,30 @@
                                 SCREEN_HEIGHT,
                                 SDL_WINDOW_SHOWN);
 
-        if (!window) {
-            cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << endl;
+        if (!window)
+         {
+            cout << "Window could not be created! SDL_Error: " << SDL_GetError() << endl;
             exit(1);
-        }
+         }
 
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
         if (!renderer) 
         {
-            cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << endl;
+            cout << "Renderer could not be created! SDL_Error: " << SDL_GetError() << endl;
             exit(1);
         }
 
         font = TTF_OpenFont("fonts/atop-font.ttf", 24); 
         if (!font) 
         {
-            cerr << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << endl;
+            cout << "Failed to load font! SDL_ttf Error: " << TTF_GetError() << endl;
             exit(1);
         }
 
-         // Load apple image
+        
     SDL_Surface* appleSurface = IMG_Load("image/apple.png");
     if (!appleSurface) {
-        cerr << "Failed to load apple image: " << IMG_GetError() << endl;
+        cout << "Failed to load apple image: " << IMG_GetError() << endl;
         exit(1);
     }
     appleTexture = SDL_CreateTextureFromSurface(renderer, appleSurface);
@@ -177,33 +181,35 @@
 
     if (!appleTexture) 
     {
-        cerr << "Failed to create apple texture: " << SDL_GetError() << endl;
+        cout << "Failed to create apple texture: " << SDL_GetError() << endl;
         exit(1);
     }
 
      SDL_Surface* snakeHeadSurface = IMG_Load("image/snake_head.png");
     if (!snakeHeadSurface) {
-        cerr << "Failed to load snake head image: " << IMG_GetError() << endl;
+        cout << "Failed to load snake head image: " << IMG_GetError() << endl;
         exit(1);
     }
     snakeHeadTexture = SDL_CreateTextureFromSurface(renderer, snakeHeadSurface);
     SDL_FreeSurface(snakeHeadSurface);
 
     if (!snakeHeadTexture) {
-        cerr << "Failed to create snake head texture: " << SDL_GetError() << endl;
+        cout << "Failed to create snake head texture: " << SDL_GetError() << endl;
         exit(1);
     }
 
     SDL_Surface* bonusFoodSurface = IMG_Load("image/apple.png");
-    if (!bonusFoodSurface) {
-        cerr << "Failed to load bonus food image: " << IMG_GetError() << endl;
+    if (!bonusFoodSurface) 
+    {
+        cout << "Failed to load bonus food image: " << IMG_GetError() << endl;
         exit(1);
     }
     bonusFoodTexture = SDL_CreateTextureFromSurface(renderer, bonusFoodSurface);
     SDL_FreeSurface(bonusFoodSurface);
 
-    if (!bonusFoodTexture) {
-        cerr << "Failed to create bonus food texture: " << SDL_GetError() << endl;
+    if (!bonusFoodTexture) 
+    {
+        cout << "Failed to create bonus food texture: " << SDL_GetError() << endl;
         exit(1);
     }
  }
@@ -214,7 +220,7 @@
     {
         SDL_Surface* surface = IMG_Load(imagePath);
         if (!surface) {
-            cerr << "Error: Could not load image " << imagePath << " " << IMG_GetError() << endl;
+            cout << "Error: Could not load image " << imagePath << " " << IMG_GetError() << endl;
             return;
         }
 
@@ -238,7 +244,7 @@
 
     if (music == nullptr)
      {
-         cerr << "Error loading music: " << Mix_GetError() << endl;
+         cout << "Error loading music: " << Mix_GetError() << endl;
      }
      else
      {
@@ -270,7 +276,8 @@
 
             SDL_RenderPresent(renderer);
         
-            while (SDL_PollEvent(&event)) {
+            while (SDL_PollEvent(&event))
+             {
                 if (event.type == SDL_QUIT) 
                 {
                     exit(0); 
@@ -286,16 +293,16 @@
                     if (mouseX >= playButtonRect.x && mouseX <= playButtonRect.x + playButtonRect.w &&
                         mouseY >= playButtonRect.y && mouseY <= playButtonRect.y + playButtonRect.h)
                         {
-                        introDone = true; // Start the game
+                        introDone = true; 
                          Mix_HaltMusic();
                         }
 
-                    // Check if the "Quit" button was clicked
+                  
                     if (mouseX >= quitButtonRect.x && mouseX <= quitButtonRect.x + quitButtonRect.w &&
                         mouseY >= quitButtonRect.y && mouseY <= quitButtonRect.y + quitButtonRect.h) 
                         {
                         exit(0);
-                    }
+                       }
                 }
             }
         }
@@ -306,6 +313,7 @@
     void sesCobiDekha(SDL_Renderer* renderer,TTF_Font* font,int score,int high_score)
     {
         cobiDekha(renderer, "image/gameover.png", 0); 
+        
         bool introDone = false;
 
         SDL_Rect RestartButtonRect = {SCREEN_WIDTH / 2 - 130, SCREEN_HEIGHT / 2 +110, 250, 50};
@@ -365,8 +373,8 @@
     Segment khabarToiriKor() 
     {
         return {
-            rand() % ((SCREEN_WIDTH - 2 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE,
-            rand() % ((SCREEN_HEIGHT - 2 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE
+            rand() % ((SCREEN_WIDTH - 4 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE,
+            rand() % ((SCREEN_HEIGHT - 4 * SQUARE_SIZE) / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE
         };
     }
 
@@ -425,7 +433,7 @@
 
     bool checkBonusCollision(const Segment& a, const Segment& b)
      {
-    const int BONUS_FOOD_SIZE = 20; // Adjust the size for the bonus food
+    const int BONUS_FOOD_SIZE = 20; 
     return abs(a.x - b.x) < BONUS_FOOD_SIZE && abs(a.y - b.y) < BONUS_FOOD_SIZE;
     }
 
@@ -441,7 +449,7 @@
         if (checkCollision(snake[0], food)) 
         {
             foodEaten = true;
-            score += 10; // Increment score
+            score += 10; 
              foodCounter++;
 
             if (eatingSound) 
@@ -467,8 +475,8 @@
 
         else if (bonusFoodActive && checkBonusCollision(snake[0], bonusFood))
          {
-        score += 50; // Bonus food gives 50 points
-        bonusFoodActive = false; // Reset bonus food
+        score += 50; 
+        bonusFoodActive = false; 
         if (eatingSound) 
          {
             Mix_PlayChannel(-1, eatingSound, 0);
@@ -490,12 +498,13 @@
             }
         }
 
-        // Check collision wall
+      
         if (snake[0].x < SQUARE_SIZE || snake[0].x >= SCREEN_WIDTH - SQUARE_SIZE ||
-            snake[0].y < SQUARE_SIZE || snake[0].y >= SCREEN_HEIGHT - SQUARE_SIZE) {
+            snake[0].y < SQUARE_SIZE || snake[0].y >= SCREEN_HEIGHT - SQUARE_SIZE) 
+            {
             foodCounter=0;
             quit = true;
-        }
+            }
 
         if (quit && gameOverSound) 
         {
@@ -503,12 +512,11 @@
        }
     }
 
-    // Render the game scene
-    void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score,SDL_Texture* appleTexture) {
+    void renderGame(SDL_Renderer* renderer, const vector<Segment>& snake, const Segment& food, TTF_Font* font, int score,SDL_Texture* appleTexture)
+     {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // Draw walls
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
         SDL_Rect walls[] = {
             {0, 0, SCREEN_WIDTH, SQUARE_SIZE},
@@ -516,11 +524,13 @@
             {0, 0, SQUARE_SIZE, SCREEN_HEIGHT},
             {SCREEN_WIDTH - SQUARE_SIZE, 0, SQUARE_SIZE, SCREEN_HEIGHT}
         };
-        for (const auto& wall : walls) {
+
+        for (const auto& wall : walls) 
+        {
             SDL_RenderFillRect(renderer, &wall);
         }
 
-        // Draw food
+       
         SDL_Rect foodRect = {food.x, food.y, SQUARE_SIZE, SQUARE_SIZE};
        SDL_RenderCopy(renderer, appleTexture, nullptr, &foodRect);
 
@@ -531,13 +541,13 @@
         }
 
 
-        SDL_Rect headRect = {snake[0].x, snake[0].y, SQUARE_SIZE, SQUARE_SIZE};
+     SDL_Rect headRect = {snake[0].x, snake[0].y, SQUARE_SIZE, SQUARE_SIZE};
      SDL_RenderCopy(renderer, snakeHeadTexture, nullptr, &headRect);
 
-// Set render color for snake body
-SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Green snake body
+   
+SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); 
 
-// Function to render a filled circle
+
 auto drawCircle = [&](int centerX, int centerY, int radius) {
     for (int y = -radius; y <= radius; ++y) {
         for (int x = -radius; x <= radius; ++x) {
@@ -548,17 +558,18 @@ auto drawCircle = [&](int centerX, int centerY, int radius) {
     }
 };
 
-// Draw the body (skip the head)
-for (size_t i = 1; i < snake.size(); ++i) {
+
+for (size_t i = 1; i < snake.size(); ++i) 
+{
     drawCircle(snake[i].x + SQUARE_SIZE / 2, snake[i].y + SQUARE_SIZE / 2, SQUARE_SIZE / 2);
 }
-        // Render the score
+       
         renderText(renderer, font, "Score: " + to_string(score), 500, 0);
 
         SDL_RenderPresent(renderer);
-    }
+ }
 
-    // Render text on the screen
+  
     void renderText(SDL_Renderer* renderer, TTF_Font* font, const string& text, int x, int y) {
         SDL_Color white = {255, 255, 255, 255};
         SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), white);
@@ -572,27 +583,30 @@ for (size_t i = 1; i < snake.size(); ++i) {
     }
 
     void saveHighScore(int highScore) 
- {
-    std::ofstream outFile("highscore.txt");  // Open a file to write
+    {
+    std::ofstream outFile("highscore.txt"); 
     if (outFile.is_open()) {
-        outFile << highScore;  // Save the high score to the file
-        outFile.close();  // Close the file after writing
-    } else {
-        cerr << "Error: Could not open highscore file for writing!" << endl;
+        outFile << highScore; 
+        outFile.close();  
     }
-}
+     else 
+    {
+        cout << "Error: Could not open highscore file for writing!" << endl;
+    }
+   }
 
 int loadHighScore()
  {
-    std::ifstream inFile("highscore.txt");  // Open a file to read
+    std::ifstream inFile("highscore.txt"); 
     int highScore = 0;
 
-    if (inFile.is_open()) {
-        inFile >> highScore;  // Read the high score from the file
-        inFile.close();  // Close the file after reading
-    }
+    if (inFile.is_open())
+     {
+        inFile >> highScore;  
+        inFile.close(); 
+     }
 
-    return highScore;  // Return the loaded high score, default to 0 if no file found
+    return highScore; 
 }
 
 
